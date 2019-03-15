@@ -1,0 +1,28 @@
+<h3>pdfアップロード</h3>
+<h4>アップロードするファイルを選択して、<br>アップロードボタンを押してください。</h4>
+<small style='color:red'>アップロードできるのはPDFファイルのみです。</small>
+<br><br>
+<form action="https://ruaupload.s3.amazonaws.com/"
+        method="post"
+        enctype="multipart/form-data">
+<input type="hidden" name="key" value="MrKWBS2F.pdf">
+<input type="hidden" name="AWSAccessKeyId"
+        value="AKIAILYFTBCNIERJLYKA">
+<input type="hidden" name="acl" value="private">
+<input type="hidden" name="success_action_redirect"
+        value="https://upload.rua.jp/pdf/done.php">
+<input type="hidden" name="policy"
+        value="eyAiZXhwaXJhdGlvbiI6ICIyMDE5LTAzLTE0VDA0OjU1OjA4LjAwMFoiLAogICJjb25kaXRpb25zIjogWwogICAgeyJidWNrZXQiOiAicnVhdXBsb2FkIn0sCiAgICBbInN0YXJ0cy13aXRoIiwgIiRrZXkiLCAiTXJLV0JTMkYiXSwKICAgIHsiYWNsIjogInByaXZhdGUifSwKICAgIHsic3VjY2Vzc19hY3Rpb25fcmVkaXJlY3QiOiAiaHR0cHM6Ly91cGxvYWQucnVhLmpwL3BkZi9kb25lLnBocCJ9LAogICAgWyJzdGFydHMtd2l0aCIsICIkQ29udGVudC1UeXBlIiwgIiJdCiAgXQp9">
+<input type="hidden" name="signature" value="wC21vzcHRCYsOVHuOldZXfxICzY=">
+<input type="hidden" name="Content-Type" value='application/pdf'>
+<input name="file" type="file" id='file'><br><br>
+<input type="submit" value="アップロード">
+</form>
+
+
+ここから作成
+<%= form_tag %>
+<%= form_for @file, html: { id: "file-upload-form" } do |f| %>
+  <%= f.text_field :path %>
+  <%= f.submit "保存" %>
+<% end %>

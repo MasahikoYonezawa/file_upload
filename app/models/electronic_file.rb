@@ -1,0 +1,2 @@
+class ElectronicFile < ApplicationRecord
+end
