@@ -13,7 +13,7 @@
 ActiveRecord::Schema.define(version: 20190315022444) do
 
   create_table "electronic_files", force: :cascade do |t|
-    t.string "path"
+    t.text "path"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
