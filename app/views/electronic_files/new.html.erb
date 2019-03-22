@@ -1,190 +1,23 @@
 <div>
-  画像を投稿します
+  ファイルをS3にアップロードします
 
   <div style="width: 500px">
     <form enctype="multipart/form-data" method="post">
-      <!--<input type="file" name="userfile" id="userfile" accept="image/*">-->
       <input type="file" name="userfile" id="userfile" class="form-group">
     </form>
   </div>
 </div>
-
-<!--<div id="thumbnail" style="max-width: 100px;">-->
-<!--</div>-->
-
-<button class="btn btn-primary" id="upload">投稿</button>
-<div>
+<div id="message"></div>
+<div id="save_form">
   S3にアップロードしたファイルのオブジェクトURLをDBに保存します
   <%= form_for @file do |f| %>
     <div class="form-group">
       <%= f.label :path, "パス" %>
-      <%= f.text_field :path, id: :file_path, size: 100, readonly: true %>
+      <%= f.text_field :path, id: :file_path, size: 100, disabled: true %>
     </div>
     <div class="actions">
-      <%= f.submit "保存" %>
+      <%= f.submit "保存", id: :save_submit, disabled: true %>
     </div>
   <% end %>
 </div>
-<!--<div>-->
-<!--  S3内の画像を表示-->
-<!--  <div>-->
-    <!--<button onclick="listObjs()">S3 - List Objects</button>-->
-    <!--<div id="objKeys"></div>-->
-<!--    <div id="objImgs"></div>-->
-<!--  </div>-->
-<!--</div>-->
-
- 
-<!--<script src="https://sdk.amazonaws.com/js/aws-sdk-2.0.0-rc1.min.js"></script>-->
-<!--<script type="text/javascript">AWS.config.update({accessKeyId: gon.aws_access_key_id, secretAccessKey: gon.aws_secret_key});</script>-->
-<script type="text/javascript">
-$(function() {
-  var file = null;
-
-  // アップロードするファイルを選択
-  $('input[type=file]').change(function() {
-    file = $(this).prop('files')[0];
-    // 画像以外は処理を停止させるためファイル形式をチェック
-    // if (file.type != 'image/jpeg' && file.type != 'image/png') {
-    //   // 画像でない場合は消す
-    //   var img_src = $('<img>').attr('src', '/plus.png')
-    //   $('#thumbnail').html(img_src);
-    //   file = null
-    //   return;
-    // }
-
-    // // サムネ表示
-    // var reader = new FileReader();
-    // reader.onload = function() {
-    //   var img_src = $('<img>').attr('src', reader.result)
-    //   img_src.css('width', '500px');
-    //   $('#thumbnail').html(img_src);
-    // }
-    // reader.readAsDataURL(file);
-  });
-
-  // アップロードボタンクリック
-  $('#upload').click(function(){
-    // ファイルが指定されていなければ何も起こらない
-    if(!file) {
-      return;
-    }
-    
-    // ファイル名に付与する現在日時を取得
-    var now = new Date();
-    var year = now.getFullYear();
-    var mon = ("0" + (now.getMonth() + 1)).slice(-2);
-    var day = ("0" + now.getDate()).slice(-2);
-    var hour = ("0" + now.getHours()).slice(-2);
-    var min = ("0" + now.getMinutes()).slice(-2);
-    var sec = ("0" + now.getSeconds()).slice(-2);
-    var time = String(year) + String(mon) + String(day) + String(hour) + String(min) + String(sec)
-
-    // ポリシーを発行する
-    $.ajax({
-      url: 'upload',
-      type: 'POST',
-      data: {
-        content_type: file.type,
-        size: file.size,
-        name: file.name,
-        time: time
-      }
-    })
-    .done(function( data, textStatus, jqXHR ) {
-      // 取得したポリシーをフォームデータの形に整形する
-      var name, fd = new FormData();
-      for (name in data.form) if (data.form.hasOwnProperty(name)) {
-        fd.append(name, data.form[name]);
-      }
-      fd.append('file', file); // ファイルを添付
-        console.log(fd);
-      $.ajax({
-        url: data.url,
-        type: 'POST',
-        dataType: 'json',
-        data: fd,
-        processData: false,
-        contentType: false
-      })
-      .done(function( data, textStatus, jqXHR ) {
-        console.log('success!')
-        var name = time + "_" + $('#userfile')[0].files[0].name;
-        $.ajax({
-          url: 'download',
-          type: 'POST',
-          data: {
-            name: name
-          }
-        })
-        .done(function (data) {
-          console.log('success!3');
-          var s3BucketName = gon.s3_bucket;
-          var s3RegionName = gon.s3_region;
-          var object_urls = '';
-          object_urls += "https://s3-" + s3RegionName + ".amazonaws.com/" + s3BucketName + "/" + data['key'];
-          $("#file_path").val(object_urls);
-        }).fail(function () {
-          console.log('error!3');
-        })
-        // var s3BucketName = gon.s3_bucket;
-        // var s3RegionName = gon.s3_region;
-        // var s3 = new AWS.S3({params: {Bucket: s3BucketName, Region:s3RegionName}});
-        // var name = time + "_" + $('#userfile')[0].files[0].name;
-        // s3.listObjects(function(error, data) {
-        //   if (error === null) {
-        //     var object_urls = '';
-        //     // var html_imgs = '';
-        //     jQuery.each(data.Contents, function(index, obj) {
-        //       if(obj.Key == name){
-        //         object_urls += "https://s3-" + s3RegionName + ".amazonaws.com/" + s3BucketName + "/" + obj.Key;
-        //         $("#file_path").val(object_urls);
-        //         // var params = {Bucket: s3BucketName, Key: obj.Key};
-        //         // var url = s3.getSignedUrl('getObject', params);
-        //         // html_imgs += "<img src='" + url + "'/><br/>";
-        //       }
-        //     });
-        //     // jQuery("#objImgs").html(html_imgs);
-        //   } else {
-        //     console.log(error);
-        //   }
-        // });
-      })
-      .fail(function( jqXHR, textStatus, errorThrown ) {
-        // アップロード時のエラー
-        console.log('error: 2'); 
-      });  
-
-    })
-    .fail(function( jqXHR, textStatus, errorThrown ) {
-      // ポリシー取得時のエラー
-      console.log('error: 1');
-    });
-
-  });
-
-});
-</script>
-<!--<script type="text/javascript">-->
-<!--  var s3BucketName = gon.s3_bucket;-->
-<!--  var s3RegionName = gon.s3_region;-->
-<!--  function listObjs() {-->
-<!--    var s3 = new AWS.S3({params: {Bucket: s3BucketName, Region:s3RegionName}});-->
-<!--    s3.listObjects(function(error, data) {-->
-<!--      if (error === null) {-->
-<!--        var html_keys = 'Object Keys:<br />';-->
-<!--        var html_imgs = '';-->
-<!--        jQuery.each(data.Contents, function(index, obj) {-->
-<!--            var params = {Bucket: s3BucketName, Key: obj.Key};-->
-<!--            var url = s3.getSignedUrl('getObject', params);-->
-<!--            html_keys += (index + ': ' + obj.Key + '<br />');-->
-<!--            html_imgs += "<img src='" + url + "'/><br/>";-->
-<!--        });-->
-<!--        jQuery("#objKeys").html(html_keys);-->
-<!--        jQuery("#objImgs").html(html_imgs);-->
-<!--      } else {-->
-<!--        console.log(error);-->
-<!--      }-->
-<!--    });-->
-<!--  }-->
-<!--</script>-->
+<%= javascript_include_tag 'electronic_files/new.js' %>
