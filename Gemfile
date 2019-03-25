@@ -10,8 +10,9 @@ gem 'turbolinks',   '5.0.1'
 gem 'jbuilder',     '2.7.0'
 gem 'gon'
 gem 'dotenv-rails'
-gem 'aws-sdk', '~>1'
+gem 'aws-sdk', '~>2'
 gem 'bootstrap-sass', '3.3.7'
+gem 'timers'
 
 group :development, :test do
   gem 'sqlite3', '1.3.13'

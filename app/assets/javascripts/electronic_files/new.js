@@ -1,7 +1,7 @@
 $(function() {
   var file = null;
 
-  // アップロードするファイルを選択
+  // アップロードするファイルを選択で発火
   $('#userfile').change(function() {
     
     file = $(this).prop('files')[0];
@@ -39,7 +39,6 @@ $(function() {
         fd.append(name, data.form[name]);
       }
       fd.append('file', file); // ファイルを添付
-        console.log(fd);
       $.ajax({
         url: data.url,
         type: 'POST',
@@ -50,7 +49,7 @@ $(function() {
       })
       .done(function( data, textStatus, jqXHR ) {
         console.log('success!')
-        
+        $("#message").text("アップロードに成功しました");
         var name = time + "_" + $('#userfile')[0].files[0].name;
         $.ajax({
           url: 'download',
@@ -61,16 +60,17 @@ $(function() {
         })
         .done(function (data) {
           console.log('success!3');
-          $("#message").text("アップロードに成功しました");
+          key = data['key'];
           var s3BucketName = gon.s3_bucket;
           var s3RegionName = gon.s3_region;
           var object_urls = '';
-          object_urls += "https://s3-" + s3RegionName + ".amazonaws.com/" + s3BucketName + "/" + data['key'];
+          object_urls += "https://s3-" + s3RegionName + ".amazonaws.com/" + s3BucketName + "/" + key;
           $("#file_path").val(object_urls);
           $("#file_path, #save_submit").prop('disabled', false);
         }).fail(function () {
+          // ダウンロード時のエラー
           console.log('error!3');
-          $("#message").text("アップロードに失敗しました");
+          $("#message").text("ダウンロードに失敗しました");
         })
       })
       .fail(function( jqXHR, textStatus, errorThrown ) {
@@ -85,6 +85,26 @@ $(function() {
       console.log('error: 1');
       $("#message").text("アップロードに失敗しました");
     });
+
+  });
+  
+  // 保存ボタンをクリックで別のバケットにコピー
+  $('#save_submit').click(function() {
+    $.ajax({
+      url: 'copy',
+      type: 'POST',
+      data: {
+        key: key
+      }
+    })
+    .done(function (data) {
+      console.log('success!');
+      
+    }).fail(function () {
+      // ダウンロード時のエラー
+      console.log('error!');
+      
+    })
 
   });
 });

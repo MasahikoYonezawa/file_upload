@@ -1,7 +1,8 @@
 class ElectronicFilesController < ApplicationController
-  require 'aws-sdk-v1'
+  require 'aws-sdk'
   require 'byebug'
   require 'uri'
+  require 'timers'
   
   def upload
     # アップロード後のファイル名
@@ -52,10 +53,9 @@ class ElectronicFilesController < ApplicationController
   
   def download
     name = params[:name]
-    s3 = AWS::S3.new region: ENV['S3_REGION']
-    # s3 = Aws::S3.new ENV['S3_REGION']
-    bucket = s3.buckets[ENV['S3_BUCKET']]
-    object = bucket.objects[name]
+    s3 = Aws::S3::Resource.new(region: ENV['S3_REGION'])
+    bucket = s3.bucket(ENV['S3_BUCKET'])
+    object = bucket.object(name)
     # puts url = URI.parse(object.presigned_url(:get, expires_in: 30))
     # url = object.url_for(:read, :expires => 10*60)
     # p url
@@ -74,6 +74,18 @@ class ElectronicFilesController < ApplicationController
     
   end
   
+  def copy
+    s3 = Aws::S3::Client.new(region: ENV['S3_REGION'])
+    s3.copy_object({bucket: ENV['S3_BUCKET2'], copy_source: ENV['S3_BUCKET'] + '/' + params[:key], key: params[:key]})
+    
+    # 遅延処理後に元オブジェクトを削除
+    timers = Timers::Group.new
+    timers.after(0.5) {
+      s3.delete_object(:bucket => ENV['S3_BUCKET'], :key => params[:key]) 
+    }
+    timers.wait
+  end
+  
   def new
     @file = ElectronicFile.new
     gon.s3_bucket = ENV['S3_BUCKET']
@@ -83,6 +95,9 @@ class ElectronicFilesController < ApplicationController
   end
   
   def create
+    p electronic_file_params["path"]
+    electronic_file_params["path"].gsub!(ENV['S3_BUCKET'], ENV['S3_BUCKET2'])
+    p electronic_file_params["path"]
     @file = ElectronicFile.new(electronic_file_params)
     if @file.save!
       redirect_to '/electronic_files/new', notice: '保存しました。'
